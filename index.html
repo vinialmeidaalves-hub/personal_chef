@@ -833,10 +833,10 @@ function removeTyping() { var t = document.getElementById('typ'); if(t) t.remove
 async function callClaude() {
   showTyping();
   try {
-    var res = await fetch('https://api.anthropic.com/v1/messages', {
+    var res = await fetch('https://cozinha-proxy.vini-almeida-alves.workers.dev', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({
-        model:'claude-sonnet-4-20250514', max_tokens:1000,
+        model:'gemini-2.0-flash', max_tokens:1000,
         system: getSystem(),
         messages: chatHistory.slice(-12).map(function(m){ return {role:m.role, content:m.content}; })
       })
