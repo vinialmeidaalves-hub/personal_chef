@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<title>Cozinha</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0e0e0e;--bg2:#161616;--bg3:#1e1e1e;--border:#2e2e2e;
+  --text:#f0ece4;--text2:#9a9488;--text3:#5a5650;
+  --gold:#c8a96e;--gold2:#8a6e3e;--gold-bg:rgba(200,169,110,0.08);--gold-bg2:rgba(200,169,110,0.14);
+  --teal:#4db898;--teal-bg:rgba(77,184,152,0.1);--teal2:#2d8a6a;
+  --coral:#e07a5f;--coral-bg:rgba(224,122,95,0.08);
+  --r:14px;--r2:10px;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:"DM Sans",sans-serif;overflow:hidden}
+.app{display:flex;flex-direction:column;height:100vh;max-width:430px;margin:0 auto}
+.topbar{padding:52px 20px 12px;display:flex;align-items:flex-end;justify-content:space-between;flex-shrink:0}
+.topbar-title{font-family:"Playfair Display",serif;font-size:28px;font-weight:500;letter-spacing:-0.02em}
+.topbar-sub{font-size:12px;color:var(--text3);margin-top:2px}
+.topbar-date{font-size:12px;color:var(--text3);text-align:right}
+.scroll{flex:1;overflow-y:auto;padding:0 20px 100px;-webkit-overflow-scrolling:touch}
+.scroll::-webkit-scrollbar{display:none}
+.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--bg);border-top:1px solid var(--border);display:flex;padding:10px 0 28px;z-index:100}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;opacity:0.4;transition:opacity 0.2s}
+.nav-item.active{opacity:1}
+.nav-icon{width:22px;height:22px;display:flex;align-items:center;justify-content:center}
+.nav-label{font-size:10px;color:var(--text2);letter-spacing:0.04em}
+.nav-item.active .nav-label{color:var(--gold)}
+.panel{display:none}.panel.active{display:block}
+.slabel{font-size:10px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em;margin:20px 0 10px}
+.btn-ghost{font-size:12px;padding:7px 14px;border-radius:30px;border:1px solid var(--border);background:none;color:var(--text2);cursor:pointer;font-family:"DM Sans",sans-serif}
+.btn-gold{font-size:12px;padding:7px 16px;border-radius:30px;border:1px solid var(--gold2);background:var(--gold-bg);color:var(--gold);cursor:pointer;font-family:"DM Sans",sans-serif}
+.save-pill{position:fixed;top:16px;right:16px;font-size:11px;padding:4px 12px;border-radius:20px;z-index:300;pointer-events:none;opacity:0;transition:opacity 0.25s}
+.save-pill.show{opacity:1}
+.save-pill.saving{background:var(--gold-bg);color:var(--gold);border:1px solid var(--gold2)}
+.save-pill.saved{background:var(--teal-bg);color:var(--teal);border:1px solid var(--teal2)}
+.save-pill.error{background:var(--coral-bg);color:var(--coral);border:1px solid var(--coral)}
+.load-screen{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;z-index:500}
+.load-title{font-family:"Playfair Display",serif;font-size:26px;color:var(--text)}
+.load-sub{font-size:13px;color:var(--text3)}
+.load-dots{display:flex;gap:6px}
+.load-dots span{width:6px;height:6px;border-radius:50%;background:var(--gold);animation:bounce 1.2s infinite}
+.load-dots span:nth-child(2){animation-delay:.2s}
+.load-dots span:nth-child(3){animation-delay:.4s}
+.hero-card{background:linear-gradient(135deg,#1a1508,#1e1a0e);border:1px solid var(--gold2);border-radius:var(--r);padding:20px;margin-bottom:16px;position:relative;overflow:hidden}
+.hero-card::before{content:"";position:absolute;top:-30px;right:-30px;width:120px;height:120px;background:radial-gradient(circle,rgba(200,169,110,0.12),transparent 70%);pointer-events:none}
+.hero-eyebrow{font-size:10px;font-weight:500;color:var(--gold);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:8px}
+.hero-name{font-family:"Playfair Display",serif;font-size:22px;font-weight:500;line-height:1.2;margin-bottom:6px}
+.hero-sub{font-size:12px;color:var(--text2);margin-bottom:16px}
+.hero-actions{display:flex;gap:8px}
+.mood-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.mood-btn{font-size:12px;padding:5px 13px;border-radius:30px;border:1px solid var(--border);background:none;color:var(--text2);cursor:pointer;font-family:"DM Sans",sans-serif;transition:all 0.15s;user-select:none}
+.mood-btn.sel{border-color:var(--gold2);background:var(--gold-bg);color:var(--gold)}
+.suggest-btn{width:100%;padding:11px;border-radius:var(--r2);border:1px solid var(--gold2);background:var(--gold-bg);color:var(--gold);font-size:13px;cursor:pointer;font-family:"DM Sans",sans-serif;margin-top:4px}
+.possible-list{display:flex;flex-wrap:wrap;gap:6px}
+.pchip{font-size:12px;padding:5px 12px;border-radius:30px;border:1px solid var(--border);color:var(--text2);background:none;cursor:pointer;font-family:"DM Sans",sans-serif}
+.pchip:active{border-color:var(--gold2);color:var(--gold)}
+.search-wrap{position:relative;margin-bottom:14px}
+.srch{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:10px 14px 10px 36px;font-size:14px;color:var(--text);font-family:"DM Sans",sans-serif;outline:none}
+.srch::placeholder{color:var(--text3)}
+.srch-ico{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text3)}
+.fscroll{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;margin-bottom:14px}
+.fscroll::-webkit-scrollbar{display:none}
+.fchip{font-size:12px;padding:5px 14px;border-radius:30px;border:1px solid var(--border);background:none;color:var(--text2);cursor:pointer;white-space:nowrap;font-family:"DM Sans",sans-serif;flex-shrink:0}
+.fchip.active{background:var(--gold-bg);border-color:var(--gold2);color:var(--gold)}
+.recipe-list{display:flex;flex-direction:column;gap:8px}
+.recipe-row{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer}
+.recipe-row:active{border-color:var(--gold2)}
+.rinfo{flex:1;min-width:0}
+.rcat{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:2px}
+.rname{font-size:14px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sdot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dok{background:var(--teal)}.dpa{background:var(--gold)}.dmi{background:var(--coral)}
+.week-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:14px 16px;margin-bottom:8px}
+.wday{font-size:11px;font-weight:500;color:var(--gold);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:10px}
+.mrow{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)}
+.mrow:last-child{border-bottom:none;padding-bottom:0}
+.mlabel{font-size:11px;color:var(--text3);width:64px;flex-shrink:0}
+.mname{font-size:13px;color:var(--text);flex:1}
+.mbtn{font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid var(--border);background:none;color:var(--text3);cursor:pointer;font-family:"DM Sans",sans-serif;white-space:nowrap}
+.stats-bar{display:flex;gap:8px;margin-bottom:16px}
+.scard{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:10px;text-align:center}
+.scard.hi .snum{color:var(--teal)}
+.snum{font-size:22px;font-weight:500;color:var(--text)}
+.slbltxt{font-size:10px;color:var(--text3);margin-top:2px}
+.add-row{display:flex;gap:8px;margin-bottom:12px}
+.add-input{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:30px;padding:9px 14px;font-size:13px;color:var(--text);font-family:"DM Sans",sans-serif;outline:none}
+.add-input::placeholder{color:var(--text3)}
+.add-input:focus{border-color:var(--gold2)}
+.add-btn{padding:9px 16px;border-radius:30px;border:1px solid var(--gold2);background:var(--gold-bg);color:var(--gold);font-size:13px;cursor:pointer;font-family:"DM Sans",sans-serif;white-space:nowrap}
+.ia-btn{width:100%;padding:12px;border-radius:var(--r2);border:1px solid var(--gold2);background:var(--gold-bg);color:var(--gold);font-size:13px;cursor:pointer;font-family:"DM Sans",sans-serif;margin-bottom:20px}
+.inv-grp{margin-bottom:18px}
+.inv-grp-lbl{font-size:10px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.inv-grid{display:flex;flex-wrap:wrap;gap:6px}
+.ichip{display:inline-flex;align-items:center;gap:5px;font-size:13px;padding:6px 12px;border-radius:30px;border:1px solid var(--border);color:var(--text3);background:var(--bg2);cursor:pointer;font-family:"DM Sans",sans-serif;user-select:none;position:relative;transition:all 0.12s}
+.ichip.has{background:var(--teal-bg);border-color:var(--teal2);color:var(--teal)}
+.ichip.low{border-color:var(--coral);background:var(--coral-bg)}
+.ichip.low .ichip-dot{background:var(--coral)}
+.ichip:active{transform:scale(0.95)}
+.ichip-dot{width:6px;height:6px;border-radius:50%;background:var(--text3);flex-shrink:0;transition:background 0.15s}
+.ichip.has .ichip-dot{background:var(--teal)}
+.ichip-qty{font-size:10px;color:var(--teal);font-weight:500;background:rgba(77,184,152,0.15);border-radius:10px;padding:1px 6px;margin-left:2px;cursor:pointer}
+.ichip.low .ichip-qty{color:var(--coral);background:rgba(224,122,95,0.15)}
+.del-x{display:none;width:14px;height:14px;background:var(--coral);border-radius:50%;font-size:9px;color:white;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;line-height:1;margin-left:2px}
+.cat-select{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:30px;padding:9px 14px;font-size:13px;color:var(--text2);font-family:"DM Sans",sans-serif;outline:none;margin-bottom:8px;cursor:pointer;appearance:none;-webkit-appearance:none}
+.cat-select:focus{border-color:var(--gold2);color:var(--text)}
+.cat-select option{background:var(--bg2);color:var(--text)}
+.ichip.custom:hover .del-x{display:flex}
+.qty-modal{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:400;display:flex;align-items:flex-end;justify-content:center}
+.qty-sheet{background:var(--bg2);border-radius:20px 20px 0 0;padding:24px 20px 44px;width:100%;max-width:430px}
+.qty-title{font-size:16px;font-weight:500;color:var(--text);margin-bottom:4px}
+.qty-sub{font-size:12px;color:var(--text3);margin-bottom:18px}
+.qty-units{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.qty-ubtn{font-size:12px;padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:none;color:var(--text2);cursor:pointer;font-family:"DM Sans",sans-serif;transition:all 0.15s}
+.qty-ubtn.sel{background:var(--gold-bg);border-color:var(--gold2);color:var(--gold)}
+.qty-num{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r2);padding:14px;font-size:24px;color:var(--text);font-family:"DM Sans",sans-serif;outline:none;text-align:center;margin-bottom:16px}
+.qty-num:focus{border-color:var(--gold2)}
+.qty-save{width:100%;padding:13px;border-radius:var(--r2);border:1px solid var(--gold2);background:var(--gold-bg);color:var(--gold);font-size:14px;cursor:pointer;font-family:"DM Sans",sans-serif}
+.qty-skip{width:100%;padding:10px;border-radius:var(--r2);border:1px solid var(--border);background:none;color:var(--text3);font-size:13px;cursor:pointer;font-family:"DM Sans",sans-serif;margin-top:8px}
+.chat-wrap{display:flex;flex-direction:column;height:calc(100vh - 200px)}
+.chat-msgs{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding-bottom:16px}
+.chat-msgs::-webkit-scrollbar{display:none}
+.ma{align-self:flex-start;max-width:85%}
+.mu{align-self:flex-end;max-width:85%}
+.mbubble{padding:10px 14px;border-radius:14px;font-size:13px;line-height:1.6}
+.ma .mbubble{background:var(--bg3);border:1px solid var(--border);color:var(--text);border-bottom-left-radius:4px}
+.mu .mbubble{background:var(--gold-bg2);border:1px solid var(--gold2);color:var(--gold);border-bottom-right-radius:4px}
+.chips-row{display:flex;gap:6px;overflow-x:auto;padding:10px 0 8px}
+.chips-row::-webkit-scrollbar{display:none}
+.qchip{font-size:11px;padding:6px 12px;border-radius:20px;border:1px solid var(--border);background:none;color:var(--text2);cursor:pointer;white-space:nowrap;font-family:"DM Sans",sans-serif;flex-shrink:0}
+.cinput-row{display:flex;gap:8px;align-items:center;padding-top:10px;border-top:1px solid var(--border)}
+.cinput{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:30px;padding:10px 16px;font-size:13px;color:var(--text);font-family:"DM Sans",sans-serif;outline:none}
+.cinput::placeholder{color:var(--text3)}
+.sbtn{width:36px;height:36px;border-radius:50%;background:var(--gold-bg);border:1px solid var(--gold2);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.typing{display:flex;gap:4px;padding:12px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:14px;border-bottom-left-radius:4px;width:fit-content}
+.typing span{width:6px;height:6px;background:var(--text3);border-radius:50%;animation:bounce 1.2s infinite}
+.typing span:nth-child(2){animation-delay:.2s}
+.typing span:nth-child(3){animation-delay:.4s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-6px)}}
+.fade-in{animation:fi .25s ease}
+@keyframes fi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+</style>
+</head>
+<body>
+<div class="load-screen" id="load-screen">
+  <div class="load-title">Cozinha</div>
+  <div class="load-sub">Sincronizando estoque...</div>
+  <div class="load-dots"><span></span><span></span><span></span></div>
+</div>
+<div class="save-pill" id="save-pill"></div>
+<div class="app">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">Cozinha</div>
+      <div class="topbar-sub" id="topbar-sub">carregando...</div>
+    </div>
+    <div class="topbar-date" id="top-date"></div>
+  </div>
+  <div class="scroll">
+    <div class="panel active" id="panel-hoje">
+      <div class="hero-card">
+        <div class="hero-eyebrow">Sugestão do dia</div>
+        <div class="hero-name" id="hero-name">Fraldinha na manteiga</div>
+        <div class="hero-sub" id="hero-sub">Com o que você já tem</div>
+        <div class="hero-actions">
+          <button class="btn-ghost" onclick="randomSuggestion()">Outra ideia</button>
+          <button class="btn-gold" onclick="openRecipeChat(document.getElementById('hero-name').textContent)">Ver receita →</button>
+        </div>
+      </div>
+      <div class="slabel" style="margin-bottom:6px">⏱ Tempo</div>
+      <div class="mood-row">
+        <button class="mood-btn" onclick="setMood('tempo','15min',this)">15 min</button>
+        <button class="mood-btn" onclick="setMood('tempo','30min',this)">30 min</button>
+        <button class="mood-btn sel" onclick="setMood('tempo','1h',this)">1 hora</button>
+        <button class="mood-btn" onclick="setMood('tempo','sem pressa',this)">Sem pressa</button>
+      </div>
+      <div class="slabel" style="margin-bottom:6px">⚡ Energia</div>
+      <div class="mood-row">
+        <button class="mood-btn" onclick="setMood('energia','zero',this)">Zero</button>
+        <button class="mood-btn sel" onclick="setMood('energia','medio',this)">Médio</button>
+        <button class="mood-btn" onclick="setMood('energia','animado',this)">Animado</button>
+      </div>
+      <div class="slabel" style="margin-bottom:6px">🌤 Clima</div>
+      <div class="mood-row">
+        <button class="mood-btn" onclick="setMood('clima','frio',this)">Frio</button>
+        <button class="mood-btn sel" onclick="setMood('clima','neutro',this)">Neutro</button>
+        <button class="mood-btn" onclick="setMood('clima','quente',this)">Quente</button>
+      </div>
+      <button class="suggest-btn" onclick="suggestFromMood()">✦ Sugerir com base no meu momento →</button>
+      <div class="slabel">Possível agora</div>
+      <div class="possible-list" id="possible-list"></div>
+    </div>
+    <div class="panel" id="panel-receitas">
+      <div class="search-wrap">
+        <span class="srch-ico">⌕</span>
+        <input class="srch" placeholder="Buscar receita..." oninput="filterRecipes(this.value)"/>
+      </div>
+      <div class="fscroll" id="cat-filters"></div>
+      <div class="recipe-list" id="recipe-list"></div>
+    </div>
+    <div class="panel" id="panel-cardapio">
+      <div class="slabel">Esta semana</div>
+      <div id="menu-container"></div>
+      <button class="btn-ghost" style="width:100%;padding:12px;margin-top:8px" onclick="goChat('Monte um cardápio para a semana baseado no meu inventário.')">Gerar com IA →</button>
+    </div>
+    <div class="panel" id="panel-inv">
+      <div class="stats-bar" id="inv-stats"></div>
+      <div style="margin-bottom:12px">
+        <div class="add-row" style="margin-bottom:8px">
+          <input class="add-input" id="new-ing" placeholder="Nome do ingrediente..." onkeydown="if(event.key==='Enter')addIngredient()"/>
+          <button class="add-btn" onclick="addIngredient()">+ Add</button>
+        </div>
+        <select class="cat-select" id="new-ing-cat">
+          <option value="_c">Meus ingredientes (sem categoria)</option>
+          <option value="Proteinas">Proteinas</option>
+          <option value="Laticinios">Laticinios</option>
+          <option value="Graos e Massas">Graos e Massas</option>
+          <option value="Hortifruti">Hortifruti</option>
+          <option value="Ervas e Pimentas">Ervas e Pimentas</option>
+          <option value="Umami e Temperos">Umami e Temperos</option>
+          <option value="Molhos e Oleos">Molhos e Oleos</option>
+          <option value="Outros">Outros</option>
+        </select>
+      </div>
+      <button class="ia-btn" onclick="askNewRecipes()">✦ Sugerir receitas com meu estoque →</button>
+      <div id="inv-groups"></div>
+    </div>
+    <div class="panel" id="panel-chef">
+      <div class="chat-wrap">
+        <div class="chat-msgs" id="chat-msgs">
+          <div class="ma fade-in"><div class="mbubble">Olá! Sou seu sous chef. Estoque sincronizado. O que quer cozinhar?</div></div>
+        </div>
+        <div class="chips-row">
+          <button class="qchip" onclick="sendChat('O que consigo fazer agora com o que tenho?')">O que consigo agora?</button>
+          <button class="qchip" onclick="sendChat('Menu para jantar com amigos')">Jantar com amigos</button>
+          <button class="qchip" onclick="sendChat('Aprimorar meu rosbife')">Aprimorar rosbife</button>
+          <button class="qchip" onclick="sendChat('Receita perfeita de chimichurri')">Chimichurri</button>
+          <button class="qchip" onclick="sendChat('Harmonização de vinho')">Harmonização</button>
+        </div>
+        <div class="cinput-row">
+          <input class="cinput" id="chat-input" placeholder="Pergunte qualquer coisa..." onkeydown="if(event.key==='Enter')sendChatInput()"/>
+          <div class="sbtn" onclick="sendChatInput()">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1 7h12M8 3l5 4-5 4" stroke="#c8a96e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <nav class="nav">
+    <div class="nav-item active" onclick="showPanel('hoje',this)">
+      <div class="nav-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="3" stroke="currentColor" stroke-width="1.5"/><path d="M10 2v2M10 16v2M2 10h2M16 10h2M4.22 4.22l1.42 1.42M14.36 14.36l1.42 1.42M4.22 15.78l1.42-1.42M14.36 5.64l1.42-1.42" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+      <span class="nav-label">Hoje</span>
+    </div>
+    <div class="nav-item" onclick="showPanel('receitas',this)">
+      <div class="nav-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M7 7h6M7 10h6M7 13h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+      <span class="nav-label">Receitas</span>
+    </div>
+    <div class="nav-item" onclick="showPanel('cardapio',this)">
+      <div class="nav-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="4" width="14" height="13" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M3 8h14M7 2v4M13 2v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+      <span class="nav-label">Cardápio</span>
+    </div>
+    <div class="nav-item" onclick="showPanel('inv',this)">
+      <div class="nav-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M3 5h14M3 10h10M3 15h7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="16" cy="15" r="2.5" stroke="currentColor" stroke-width="1.3"/><path d="M16 13.8v1.2l.7.7" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+      <span class="nav-label">Estoque</span>
+    </div>
+    <div class="nav-item" onclick="showPanel('chef',this)">
+      <div class="nav-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M4 16v-1a4 4 0 014-4h4a4 4 0 014 4v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="10" cy="7" r="3" stroke="currentColor" stroke-width="1.5"/></svg></div>
+      <span class="nav-label">Chef IA</span>
+    </div>
+  </nav>
+</div>
+<script>
+var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyb2FpWb8fCHmXqEXYRaJgeoEGAzLeh-lCjJkBAfh0-ZYw6IlSr6tDF6B7W8qrkyL8C6w/exec';
+
+var DEFAULT = {
+  'Proteinas':[
+    {n:'Alcatra',h:false},{n:'Fraldinha',h:false},{n:'Lombo',h:false},{n:'Frango',h:false},
+    {n:'Lagarto',h:false},{n:'Atum enlatado',h:false},{n:'Hamburguer',h:false},{n:'Calabresa',h:false},
+    {n:'Carne moida',h:false},{n:'Carne tartare',h:false},{n:'Camarao',h:false},
+    {n:'Linguica',h:false},{n:'Bacon',h:false},{n:'Guanciale',h:false},
+    {n:'Kafta',h:false},{n:'Carpaccio',h:false},{n:'Karaage',h:false},{n:'Ossos de boi',h:false},
+  ],
+  'Laticinios':[
+    {n:'Manteiga',h:false},{n:'Mussarela',h:false},{n:'Parmesao',h:false},
+    {n:'Creme de leite',h:false},{n:'Iogurte',h:false},{n:'Ovos',h:false},
+  ],
+  'Graos e Massas':[
+    {n:'Arroz normal',h:false},{n:'Arroz arboreo',h:false},{n:'Tapioca',h:false},
+    {n:'Massa de lasanha',h:false},{n:'Macarrao ramen',h:false},{n:'Arroz japones',h:false},
+    {n:'Tortilha',h:false},{n:'Trigo para kibe',h:false},{n:'Grao-de-bico',h:false},
+    {n:'Pao sirio',h:false},{n:'Ciabatta',h:false},
+  ],
+  'Hortifruti':[
+    {n:'Alho',h:false},{n:'Abobora',h:false},{n:'Batata',h:false},
+    {n:'Cebola',h:false},{n:'Cebola roxa',h:false},{n:'Cenoura',h:false},
+    {n:'Salsao',h:false},{n:'Tomate',h:false},{n:'Pepino',h:false},
+    {n:'Limao',h:false},{n:'Limao siciliano',h:false},
+  ],
+  'Ervas e Pimentas':[
+    {n:'Salsinha',h:false},{n:'Manjericao',h:false},{n:'Tomilho',h:false},
+    {n:'Alecrim',h:false},{n:'Cebolinha',h:false},{n:'Coentro',h:false},
+    {n:'Endro',h:false},{n:'Hortela',h:false},{n:'Pimenta dedo-de-moca',h:false},
+    {n:'Pimenta biquinho',h:false},{n:'Gengibre',h:false},
+  ],
+  'Umami e Temperos':[
+    {n:'Misso',h:false},{n:'Shoyu',h:false},{n:'Gochujang',h:false},
+    {n:'Ajinomoto',h:false},{n:'Furikake',h:false},{n:'Paprica',h:false},
+    {n:'Noz moscada',h:false},{n:'Pimenta do reino',h:false},
+    {n:'Hondashi',h:false},{n:'Funghi seco',h:false},{n:'Gergelim',h:false},{n:'Tahine',h:false},
+  ],
+  'Molhos e Oleos':[
+    {n:'Azeite',h:false},{n:'Oleo de gergelim',h:false},{n:'Tomate pelado',h:false},
+    {n:'Extrato de tomate',h:false},{n:'Molho ingles',h:false},{n:'Mel',h:false},
+    {n:'Ketchup',h:false},{n:'Mostarda dijon',h:false},{n:'Maionese',h:false},
+    {n:'Vinagre vinho tinto',h:false},{n:'Vinagre de arroz',h:false},
+    {n:'Alcaparras',h:false},{n:'Azeitona',h:false},
+  ],
+  'Outros':[
+    {n:'Farinha',h:false},{n:'Oleo',h:false},{n:'Acucar',h:false},
+    {n:'Sorvete',h:false},{n:'Chocolate',h:false},{n:'Cogumelos frescos',h:false},
+  ],
+};
+
+// Use labels for display (accented) vs keys (safe)
+var LABELS = {
+  'Proteinas':'Proteinas',
+  'Laticinios':'Laticinios',
+  'Graos e Massas':'Graos e Massas',
+  'Hortifruti':'Hortifruti',
+  'Ervas e Pimentas':'Ervas e Pimentas',
+  'Umami e Temperos':'Umami e Temperos',
+  'Molhos e Oleos':'Molhos e Oleos',
+  'Outros':'Outros',
+};
+
+var INV = JSON.parse(JSON.stringify(DEFAULT));
+var customs = [];
+var saveTimer;
+var mood = {tempo:'1h', energia:'medio', clima:'neutro'};
+
+// ── SYNC ─────────────────────────────────────────────────
+var KEY_REMAP = {
+  'Proteínas':'Proteinas','Prote\u00ednas':'Proteinas',
+  'Latic\u00ednios':'Laticinios','Laticínios':'Laticinios',
+  'Gr\u00e3os & Massas':'Graos e Massas','Grãos & Massas':'Graos e Massas',
+  'Ervas & Pimentas':'Ervas e Pimentas',
+  'Umami & Temperos':'Umami e Temperos',
+  'Molhos & \u00d3leos':'Molhos e Oleos','Molhos & Óleos':'Molhos e Oleos',
+  'Molhos & Oleos':'Molhos e Oleos',
+};
+
+function remapINV(inv) {
+  var out = {};
+  Object.keys(inv).forEach(function(k) {
+    var newKey = KEY_REMAP[k] || k;
+    if (out[newKey]) {
+      // merge
+      out[newKey] = out[newKey].concat(inv[k]);
+    } else {
+      out[newKey] = inv[k];
+    }
+  });
+  // ensure all default keys exist
+  Object.keys(DEFAULT).forEach(function(k) {
+    if (!out[k]) out[k] = JSON.parse(JSON.stringify(DEFAULT[k]));
+  });
+  return out;
+}
+
+async function loadRemote() {
+  try {
+    var res = await fetch(SCRIPT_URL);
+    var text = await res.text();
+    if (text && text.length > 2) {
+      var data = JSON.parse(text);
+      if (data.inv) INV = remapINV(data.inv);
+      if (data.customs) customs = data.customs;
+    }
+    localStorage.setItem('cozinha-v2', JSON.stringify({inv:INV,customs:customs}));
+  } catch(e) {
+    try {
+      var cached = localStorage.getItem('cozinha-v2');
+      if (cached) { var d = JSON.parse(cached); INV = remapINV(d.inv); customs = d.customs||[]; }
+    } catch(e2){}
+    showPill('offline — cache local','error');
+  }
+}
+
+async function saveRemote() {
+  showPill('salvando...','saving');
+  localStorage.setItem('cozinha-v2', JSON.stringify({inv:INV,customs:customs}));
+  try {
+    var payload = JSON.stringify({inv:INV,customs:customs,ts:Date.now()});
+    await fetch(SCRIPT_URL + '?action=save&data=' + encodeURIComponent(payload));
+    showPill('sincronizado','saved');
+  } catch(e) {
+    showPill('salvo local','saved');
+  }
+}
+
+function scheduleSave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveRemote, 600);
+}
+
+var pillTimer;
+function showPill(text, type) {
+  var el = document.getElementById('save-pill');
+  clearTimeout(pillTimer);
+  el.textContent = text;
+  el.className = 'save-pill show ' + type;
+  if (type !== 'saving') pillTimer = setTimeout(function(){ el.className = 'save-pill'; }, 2500);
+}
+
+// ── INVENTORY HELPERS ────────────────────────────────────
+function allItems() {
+  var items = [];
+  Object.keys(INV).forEach(function(g){ INV[g].forEach(function(i){ items.push(i); }); });
+  customs.forEach(function(i){ items.push(i); });
+  return items;
+}
+
+function haveList() {
+  return allItems().filter(function(i){ return i.h; }).map(function(i){ return i.n; });
+}
+
+function haveListWithQty() {
+  return allItems().filter(function(i){ return i.h; }).map(function(i){
+    return i.qty && i.qty.val ? i.n + ' (' + i.qty.val + i.qty.unit + ')' : i.n;
+  });
+}
+
+function missList() {
+  return allItems().filter(function(i){ return !i.h; }).map(function(i){ return i.n; });
+}
+
+function isLow(it) {
+  if (!it.qty || !it.qty.val) return false;
+  var v = it.qty.val, u = it.qty.unit;
+  if (u === 'g') return v <= 100;
+  if (u === 'kg') return v <= 0.2;
+  return v <= 1;
+}
+
+function findItem(group, name) {
+  if (group === '_c') return customs.find(function(i){ return i.n === name; });
+  return INV[group] && INV[group].find(function(i){ return i.n === name; });
+}
+
+// ── TOGGLE ───────────────────────────────────────────────
+function toggleItem(group, name) {
+  var it = findItem(group, name);
+  if (!it) return;
+  if (!it.h) {
+    it.h = true;
+    renderInv(); renderPossible(); updateSub();
+    openQty(group, name, true);
+  } else {
+    it.h = false;
+    delete it.qty;
+    renderInv(); renderPossible(); updateSub(); scheduleSave();
+  }
+}
+
+function delCustom(name) {
+  customs = customs.filter(function(i){ return i.n !== name; });
+  renderInv(); renderPossible(); updateSub(); scheduleSave();
+}
+
+function addIngredient() {
+  var el = document.getElementById('new-ing');
+  var catEl = document.getElementById('new-ing-cat');
+  var name = el.value.trim();
+  var cat = catEl ? catEl.value : '_c';
+  if (!name) return;
+  var existing = allItems().map(function(i){ return i.n.toLowerCase(); });
+  if (existing.indexOf(name.toLowerCase()) === -1) {
+    if (cat === '_c') {
+      customs.unshift({n:name, h:true});
+      renderInv(); renderPossible(); updateSub();
+      openQty('_c', name, true);
+    } else {
+      if (INV[cat]) {
+        INV[cat].push({n:name, h:true});
+        renderInv(); renderPossible(); updateSub();
+        openQty(cat, name, true);
+      }
+    }
+  }
+  el.value = '';
+  if (catEl) catEl.value = '_c';
+}
+
+// ── QTY MODAL ────────────────────────────────────────────
+var qtyState = {group:'', name:'', firstTime:false};
+
+function openQty(group, name, firstTime) {
+  qtyState = {group:group, name:name, firstTime:firstTime};
+  var it = findItem(group, name);
+  if (!it) return;
+  var curr = it.qty || {val:'', unit:'g'};
+  var units = ['g','kg','unid','bifes','pedacos','xic','ml','L'];
+  var unitBtns = units.map(function(u){
+    return '<button class="qty-ubtn' + (u === curr.unit ? ' sel' : '') + '" onclick="selQtyUnit(this)">' + u + '</button>';
+  }).join('');
+  var modal = document.createElement('div');
+  modal.className = 'qty-modal';
+  modal.id = 'qty-modal';
+  var skipBtn = firstTime
+    ? '<button class="qty-skip" onclick="skipQty()">Pular — so marcar que tenho</button>'
+    : '<button class="qty-skip" onclick="removeFromStock()">Remover do estoque</button>';
+  modal.innerHTML =
+    '<div class="qty-sheet">' +
+      '<div class="qty-title">' + it.n + '</div>' +
+      '<div class="qty-sub">' + (firstTime ? 'Quanto voce tem?' : 'Atualizar quantidade') + '</div>' +
+      '<div class="qty-units" id="qty-units">' + unitBtns + '</div>' +
+      '<input class="qty-num" id="qty-val" type="number" min="0" step="0.1" placeholder="0" value="' + (curr.val || '') + '"/>' +
+      '<button class="qty-save" onclick="saveQty()">Salvar</button>' +
+      skipBtn +
+    '</div>';
+  modal.addEventListener('click', function(ev){
+    if (ev.target === modal) { modal.remove(); if (firstTime) scheduleSave(); }
+  });
+  document.body.appendChild(modal);
+  setTimeout(function(){ var i = document.getElementById('qty-val'); if(i){i.focus();i.select();} }, 150);
+}
+
+function selQtyUnit(btn) {
+  var container = document.getElementById('qty-units');
+  if (!container) return;
+  container.querySelectorAll('.qty-ubtn').forEach(function(b){ b.classList.remove('sel'); });
+  btn.classList.add('sel');
+}
+
+function saveQty() {
+  var val = parseFloat(document.getElementById('qty-val').value) || 0;
+  var selBtn = document.querySelector('#qty-units .qty-ubtn.sel');
+  var unit = selBtn ? selBtn.textContent : 'g';
+  var it = findItem(qtyState.group, qtyState.name);
+  if (it) { it.qty = {val:val, unit:unit}; it.h = val > 0; }
+  var m = document.getElementById('qty-modal'); if(m) m.remove();
+  renderInv(); renderPossible(); updateSub(); scheduleSave();
+}
+
+function skipQty() {
+  var m = document.getElementById('qty-modal'); if(m) m.remove();
+  renderInv(); renderPossible(); updateSub(); scheduleSave();
+}
+
+function removeFromStock() {
+  var it = findItem(qtyState.group, qtyState.name);
+  if (it) { it.h = false; delete it.qty; }
+  var m = document.getElementById('qty-modal'); if(m) m.remove();
+  renderInv(); renderPossible(); updateSub(); scheduleSave();
+}
+
+function editQty(ev, group, name) {
+  ev.stopPropagation();
+  openQty(group, name, false);
+}
+
+// ── RENDER INVENTORY ─────────────────────────────────────
+function renderInv() {
+  var have = haveList();
+  var total = allItems().length;
+  var lowCount = allItems().filter(function(i){ return i.h && isLow(i); }).length;
+  document.getElementById('inv-stats').innerHTML =
+    '<div class="scard hi"><div class="snum">' + have.length + '</div><div class="slbltxt">Tenho</div></div>' +
+    '<div class="scard"><div class="snum">' + (total - have.length) + '</div><div class="slbltxt">Falta</div></div>' +
+    '<div class="scard"><div class="snum" style="' + (lowCount ? 'color:var(--coral)' : '') + '">' + lowCount + '</div><div class="slbltxt">Baixo</div></div>';
+
+  var html = '';
+  if (customs.length) {
+    html += '<div class="inv-grp"><div class="inv-grp-lbl">Meus ingredientes</div><div class="inv-grid">';
+    customs.forEach(function(it){
+      var cls = 'ichip custom' + (it.h ? ' has' : '') + (isLow(it) ? ' low' : '');
+      var qBadge = (it.qty && it.qty.val) ? '<span class="ichip-qty" id="qb_' + encodeURIComponent(it.n) + '">✎ ' + it.qty.val + it.qty.unit + '</span>' : '';
+      html += '<div class="' + cls + '" id="chip_' + encodeURIComponent(it.n) + '">' +
+        '<span class="ichip-dot"></span><span class="chip-label">' + it.n + '</span>' + qBadge +
+        '<span class="del-x">✕</span>' +
+        '</div>';
+    });
+    html += '</div></div>';
+  }
+
+  Object.keys(INV).forEach(function(grp){
+    html += '<div class="inv-grp"><div class="inv-grp-lbl">' + grp + '</div><div class="inv-grid">';
+    INV[grp].forEach(function(it){
+      var cls = 'ichip' + (it.h ? ' has' : '') + (isLow(it) ? ' low' : '');
+      var qBadge = (it.qty && it.qty.val) ? '<span class="ichip-qty" id="qb_' + encodeURIComponent(it.n) + '">✎ ' + it.qty.val + it.qty.unit + '</span>' : '';
+      html += '<div class="' + cls + '" id="chip_' + encodeURIComponent(it.n) + '">' +
+        '<span class="ichip-dot"></span><span class="chip-label">' + it.n + '</span>' + qBadge +
+        '</div>';
+    });
+    html += '</div></div>';
+  });
+
+  document.getElementById('inv-groups').innerHTML = html;
+
+  // Attach events via JS (no inline handlers = no escape issues)
+  attachInvEvents();
+}
+
+function attachInvEvents() {
+  // Custom chips
+  customs.forEach(function(it){
+    var chip = document.getElementById('chip_' + encodeURIComponent(it.n));
+    if (!chip) return;
+    var group = '_c', name = it.n;
+    chip.querySelector('.chip-label').addEventListener('click', function(){ toggleItem(group, name); });
+    chip.querySelector('.ichip-dot').addEventListener('click', function(){ toggleItem(group, name); });
+    var qb = chip.querySelector('.ichip-qty');
+    if (qb) qb.addEventListener('click', function(ev){ ev.stopPropagation(); openQty(group, name, false); });
+    var dx = chip.querySelector('.del-x');
+    if (dx) dx.addEventListener('click', function(ev){ ev.stopPropagation(); delCustom(name); });
+  });
+
+  // Regular chips
+  Object.keys(INV).forEach(function(grp){
+    INV[grp].forEach(function(it){
+      var chip = document.getElementById('chip_' + encodeURIComponent(it.n));
+      if (!chip) return;
+      var group = grp, name = it.n;
+      chip.addEventListener('click', function(){ toggleItem(group, name); });
+      var qb = chip.querySelector('.ichip-qty');
+      if (qb) qb.addEventListener('click', function(ev){ ev.stopPropagation(); openQty(group, name, false); });
+    });
+  });
+}
+
+function updateSub() {
+  document.getElementById('topbar-sub').textContent = haveList().length + ' ingredientes sincronizado';
+}
+
+function askNewRecipes() {
+  goChat('Com esse estoque: ' + haveListWithQty().join(', ') + ' — sugira pelo menos 5 receitas novas com tecnica refinada. Considera as quantidades.');
+}
+
+// ── MOOD ─────────────────────────────────────────────────
+function setMood(type, val, el) {
+  mood[type] = val;
+  el.closest('.mood-row').querySelectorAll('.mood-btn').forEach(function(b){ b.classList.remove('sel'); });
+  el.classList.add('sel');
+  var sug = getMoodSuggestion();
+  document.getElementById('hero-name').textContent = sug.name;
+  document.getElementById('hero-sub').textContent = sug.sub;
+}
+
+function getMoodSuggestion() {
+  var have = haveList().map(function(h){ return h.toLowerCase(); });
+  var t = mood.tempo, e = mood.energia, cl = mood.clima;
+  if (t === '15min' || e === 'zero') {
+    if (cl === 'frio') return {name:'Sopa de misso', sub:'Pronto em 15 min, aquece a alma'};
+    return {name:'Pasta manteiga + shoyu', sub:'Rapido, simples, perfeito'};
+  }
+  if (cl === 'frio') {
+    if (t === 'sem pressa') return {name:'Ramen completo', sub:'Frio pede caldo longo'};
+    return {name:'Lombo no misso', sub:'Quente, umami, reconfortante'};
+  }
+  if (cl === 'quente') {
+    if (have.some(function(h){ return h.indexOf('camarao') > -1; }))
+      return {name:'Salada de camarao com nam pla, manga e mamao verde', sub:'Leve, fresco, vibrante'};
+    return {name:'Crudo de peixe com agua de tomate', sub:'Refrescante, entrada elegante'};
+  }
+  if (e === 'animado') {
+    if (t === 'sem pressa') return {name:'Risoto de abobora com camarao', sub:'Vale cada minuto de atencao'};
+    return {name:'Rosbife', sub:'Tecnica que impressiona'};
+  }
+  var defs = [
+    {name:'Fraldinha na manteiga', sub:'Com o que voce ja tem'},
+    {name:'Alcatra com alho', sub:'Simples e certeiro'},
+    {name:'Bowl com lombo + gema', sub:'Comfort food elevado'},
+    {name:'Pasta com gochujang', sub:'Rapido, com garra'},
+  ];
+  return defs[Math.floor(Math.random() * defs.length)];
+}
+
+function randomSuggestion() {
+  var sug = getMoodSuggestion();
+  document.getElementById('hero-name').textContent = sug.name;
+  document.getElementById('hero-sub').textContent = sug.sub;
+}
+
+function suggestFromMood() {
+  var ct = mood.clima === 'frio' ? 'frio, quero algo quente' : mood.clima === 'quente' ? 'quente, quero algo leve' : 'clima neutro';
+  goChat('Tenho ' + mood.tempo + ' disponivel, energia ' + mood.energia + ', esta ' + ct + '. Inventario: ' + haveListWithQty().slice(0,15).join(', ') + '. Sugira 2-3 opcoes ranqueadas.');
+}
+
+// ── POSSIBLE ─────────────────────────────────────────────
+var KEY_MAP = {
+  'Fraldinha na manteiga':'fraldinha','Alcatra com alho':'alcatra',
+  'Pasta manteiga + shoyu':'shoyu','Pasta com gochujang':'gochujang',
+  'Arroz frito':'arroz normal','Bowl com lombo + gema':'lombo',
+  'Sopa de misso':'misso','Farofa':'farinha',
+  'Linguica + chimichurri':'linguica','Chimichurri':'salsinha','Rosbife':'alcatra'
+};
+
+function renderPossible() {
+  var have = haveList().map(function(h){ return h.toLowerCase(); });
+  var el = document.getElementById('possible-list');
+  el.innerHTML = '';
+  Object.keys(KEY_MAP).forEach(function(recipe){
+    var key = KEY_MAP[recipe].toLowerCase();
+    if (have.some(function(h){ return h.indexOf(key) > -1; })){
+      var btn = document.createElement('button');
+      btn.className = 'pchip';
+      btn.textContent = recipe;
+      btn.addEventListener('click', function(){ openRecipeChat(recipe); });
+      el.appendChild(btn);
+    }
+  });
+}
+
+// ── RECEITAS ─────────────────────────────────────────────
+var RECIPES = [
+  {n:'Fraldinha na manteiga',c:'Carnes',s:'ok'},{n:'Alcatra com alho',c:'Carnes',s:'ok'},
+  {n:'Rosbife',c:'Carnes',s:'ok'},{n:'Rosbife com molho',c:'Carnes',s:'partial'},
+  {n:'Bife mal passado + molho ingles',c:'Carnes',s:'partial'},{n:'Lombo no misso',c:'Carnes',s:'ok'},
+  {n:'Lombo caramelizado',c:'Carnes',s:'partial'},{n:'Lombo desfiado',c:'Carnes',s:'ok'},
+  {n:'Lombo com laranja',c:'Carnes',s:'partial'},
+  {n:'Risoto de abobora com camarao',c:'Assinatura',s:'partial'},{n:'Risoto de funghi',c:'Assinatura',s:'missing'},
+  {n:'Carbonara',c:'Massas',s:'missing'},{n:'Pasta alla puttanesca',c:'Massas',s:'partial'},
+  {n:'Pasta com funghi',c:'Massas',s:'missing'},{n:'Pasta manteiga + shoyu',c:'Massas',s:'ok'},
+  {n:'Pasta com gochujang',c:'Massas',s:'ok'},{n:'Lasanha classica',c:'Massas',s:'partial'},
+  {n:'Arroz frito',c:'Arroz',s:'ok'},{n:'Donburi',c:'Arroz',s:'ok'},{n:'Bowl com lombo + gema',c:'Arroz',s:'ok'},
+  {n:'Ramen completo',c:'Ramen',s:'partial'},{n:'Sopa de misso',c:'Ramen',s:'ok'},
+  {n:'Burger alto',c:'Sanduiches',s:'partial'},{n:'Sanduiche de lombo',c:'Sanduiches',s:'partial'},
+  {n:'Ciabatta porco misso + sunomono',c:'Sanduiches',s:'partial'},
+  {n:'Taco de lombo',c:'Street',s:'partial'},{n:'Karaage',c:'Street',s:'partial'},
+  {n:'Tartare classico',c:'Crus',s:'missing'},{n:'Tartare com gochujang',c:'Crus',s:'missing'},
+  {n:'Chimichurri',c:'Base',s:'ok'},{n:'Homus',c:'Arabe',s:'missing'},
+  {n:'Kafta',c:'Arabe',s:'missing'},{n:'Tabule',c:'Arabe',s:'partial'},
+  {n:'Linguica + chimichurri',c:'Petiscos',s:'ok'},{n:'Arancini',c:'Petiscos',s:'partial'},
+  {n:'Batata manteiga + ervas',c:'Acomp',s:'partial'},{n:'Farofa',c:'Acomp',s:'ok'},
+  {n:'Sunomono',c:'Frescos',s:'missing'},{n:'Picles de pepino',c:'Frescos',s:'missing'},
+  {n:'Pao com tomate',c:'Entradas',s:'partial'},
+  {n:'Salada de camarao com nam pla, manga e mamao verde',c:'Entradas',s:'missing'},
+  {n:'Crudo de peixe com agua de tomate',c:'Entradas',s:'missing'},
+];
+
+var CATS = ['Todos'];
+var seen = {};
+RECIPES.forEach(function(r){ if(!seen[r.c]){seen[r.c]=1;CATS.push(r.c);} });
+var activeFilter = 'Todos', searchVal = '';
+
+function renderRecipes() {
+  var dc = {ok:'dok', partial:'dpa', missing:'dmi'};
+  var el = document.getElementById('recipe-list');
+  el.innerHTML = '';
+  RECIPES.filter(function(r){
+    return (activeFilter === 'Todos' || r.c === activeFilter) &&
+           (!searchVal || r.n.toLowerCase().indexOf(searchVal) > -1);
+  }).forEach(function(r){
+    var row = document.createElement('div');
+    row.className = 'recipe-row';
+    row.innerHTML =
+      '<div class="rinfo"><div class="rcat">' + r.c + '</div><div class="rname">' + r.n + '</div></div>' +
+      '<div class="sdot ' + dc[r.s] + '"></div>';
+    row.addEventListener('click', function(){ openRecipeChat(r.n); });
+    el.appendChild(row);
+  });
+}
+
+function setFilter(cat, el) {
+  activeFilter = cat;
+  document.querySelectorAll('.fchip').forEach(function(x){ x.classList.remove('active'); });
+  el.classList.add('active');
+  renderRecipes();
+}
+
+function filterRecipes(v) { searchVal = v.toLowerCase(); renderRecipes(); }
+
+// ── CARDAPIO ─────────────────────────────────────────────
+var MENU = [
+  {d:'Segunda',l:'Bowl com lombo + gema',j:'Ramen com carne'},
+  {d:'Terca',l:'Pasta manteiga + shoyu',j:'Lombo desfiado'},
+  {d:'Quarta',l:'Arroz frito',j:'Fraldinha na manteiga'},
+  {d:'Quinta',l:'Sopa de misso',j:'Alcatra com alho'},
+  {d:'Sexta',l:'Taco de lombo',j:'Bife mal passado'},
+  {d:'Sabado',l:'Linguica + chimichurri',j:'Rosbife com molho'},
+  {d:'Domingo',l:'Donburi',j:'Lombo caramelizado'},
+];
+
+// ── CHEF IA ───────────────────────────────────────────────
+var chatHistory = [{role:'assistant', content:'Ola! Sou seu sous chef. Estoque sincronizado. O que quer cozinhar?'}];
+
+function getSystem() {
+  var have = haveListWithQty();
+  var miss = missList().slice(0,12);
+  var ct = mood.clima === 'frio' ? 'frio' : mood.clima === 'quente' ? 'quente' : 'neutro';
+  return 'Voce e um sous chef pessoal especializado.\n' +
+    'INVENTARIO ATUAL com quantidades: ' + have.join(', ') + '.\n' +
+    'Faltam: ' + miss.join(', ') + '.\n' +
+    'CONTEXTO: tempo: ' + mood.tempo + ', energia: ' + mood.energia + ', clima: ' + ct + '.\n' +
+    'Perfil: tecnico, refinamento, ingredientes premium, confraterniza. Vinho frutado (Malbec, Cabernet).\n' +
+    'Baseie sugestoes no inventario e quantidades. Direto, tecnico, conciso.';
+}
+
+function sendChat(msg) {
+  document.querySelectorAll('.nav-item')[4].click();
+  setTimeout(function(){
+    appendMsg('u', msg);
+    chatHistory.push({role:'user', content:msg});
+    callClaude();
+  }, 120);
+}
+function goChat(msg) { document.querySelectorAll('.nav-item')[4].click(); setTimeout(function(){ sendChat(msg); }, 120); }
+function sendChatInput() {
+  var el = document.getElementById('chat-input'), msg = el.value.trim();
+  if (!msg) return; el.value = '';
+  appendMsg('u', msg); chatHistory.push({role:'user', content:msg}); callClaude();
+}
+function appendMsg(role, text) {
+  var msgs = document.getElementById('chat-msgs');
+  var div = document.createElement('div');
+  div.className = (role === 'u' ? 'mu' : 'ma') + ' fade-in';
+  div.innerHTML = '<div class="mbubble">' + text.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>') + '</div>';
+  msgs.appendChild(div); msgs.scrollTop = msgs.scrollHeight;
+}
+function showTyping() {
+  var msgs = document.getElementById('chat-msgs');
+  var div = document.createElement('div');
+  div.className = 'ma fade-in'; div.id = 'typ';
+  div.innerHTML = '<div class="typing"><span></span><span></span><span></span></div>';
+  msgs.appendChild(div); msgs.scrollTop = msgs.scrollHeight;
+}
+function removeTyping() { var t = document.getElementById('typ'); if(t) t.remove(); }
+
+async function callClaude() {
+  showTyping();
+  try {
+    var res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514', max_tokens:1000,
+        system: getSystem(),
+        messages: chatHistory.slice(-12).map(function(m){ return {role:m.role, content:m.content}; })
+      })
+    });
+    var data = await res.json();
+    var reply = data.content.map(function(b){ return b.text||''; }).join('');
+    removeTyping(); appendMsg('a', reply);
+    chatHistory.push({role:'assistant', content:reply});
+  } catch(e) { removeTyping(); appendMsg('a','Erro ao conectar. Tente novamente.'); }
+}
+
+function openRecipeChat(name) {
+  sendChat('Me da a receita completa de "' + name + '" com tecnica refinada, mise en place e sugestao de apresentacao. Considera os ingredientes e quantidades que tenho.');
+}
+
+// ── NAV ───────────────────────────────────────────────────
+function showPanel(id, el) {
+  document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.remove('active'); });
+  document.getElementById('panel-' + id).classList.add('active');
+  el.classList.add('active');
+  document.querySelector('.scroll').scrollTop = 0;
+}
+
+// ── INIT ──────────────────────────────────────────────────
+async function init() {
+  var now = new Date();
+  var days = ['Dom','Seg','Ter','Qua','Qui','Sex','Sab'];
+  var months = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  document.getElementById('top-date').innerHTML = days[now.getDay()] + ', ' + now.getDate() + ' ' + months[now.getMonth()] + '<br>' + now.getFullYear();
+
+  // Cat filters
+  var filtersEl = document.getElementById('cat-filters');
+  CATS.forEach(function(c){
+    var btn = document.createElement('button');
+    btn.className = 'fchip' + (c === 'Todos' ? ' active' : '');
+    btn.textContent = c;
+    btn.addEventListener('click', function(){ setFilter(c, btn); });
+    filtersEl.appendChild(btn);
+  });
+  renderRecipes();
+
+  // Menu
+  var menuEl = document.getElementById('menu-container');
+  MENU.forEach(function(m){
+    var card = document.createElement('div');
+    card.className = 'week-card';
+    card.innerHTML =
+      '<div class="wday">' + m.d + '</div>' +
+      '<div class="mrow"><span class="mlabel">Almoco</span><span class="mname">' + m.l + '</span><button class="mbtn">Ver</button></div>' +
+      '<div class="mrow"><span class="mlabel">Jantar</span><span class="mname">' + m.j + '</span><button class="mbtn">Ver</button></div>';
+    var btns = card.querySelectorAll('.mbtn');
+    btns[0].addEventListener('click', function(){ openRecipeChat(m.l); });
+    btns[1].addEventListener('click', function(){ openRecipeChat(m.j); });
+    menuEl.appendChild(card);
+  });
+
+  await loadRemote();
+  renderInv(); renderPossible(); updateSub();
+  document.getElementById('load-screen').style.display = 'none';
+  var sug = getMoodSuggestion();
+  document.getElementById('hero-name').textContent = sug.name;
+  document.getElementById('hero-sub').textContent = sug.sub;
+}
+
+init();
+</script>
+</body>
+</html>
